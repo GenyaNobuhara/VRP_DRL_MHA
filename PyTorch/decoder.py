@@ -64,8 +64,8 @@ class DecoderCell(nn.Module):
 				break
 
 		pi = torch.stack(tours, 1)
-		#cost = env.get_costs(pi)
-		cost = time_cost.view(-1)
+		cost = env.get_costs(pi)
+		cost += time_cost.view(-1)
 		ll = env.get_log_likelihood(torch.stack(log_ps, 1), pi)
 		
 		if return_pi:
