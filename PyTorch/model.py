@@ -17,23 +17,24 @@ class AttentionModel(nn.Module):
 		encoder_output = self.Encoder(x)
 		decoder_output = self.Decoder(x, encoder_output, return_pi = return_pi, decode_type = decode_type)
 		if return_pi:
-			cost, ll, pi = decoder_output
-			return cost, ll, pi
-		cost, ll = decoder_output
-		return cost, ll
+			cost, ll, pi,time_cost= decoder_output
+			return cost, ll, pi,time_cost
+		cost, ll,time_cost = decoder_output
+		return cost, ll,time_cost
 		
 if __name__ == '__main__':
 	
 	model = AttentionModel()
 	model.train()
-	data = generate_data(n_samples = 5, n_customer = 20, seed = 123)
+	data = generate_data('cpu',n_samples = 5, n_customer = 20, seed = 123)
 	return_pi = True
 	output = model(data, decode_type = 'sampling', return_pi = return_pi)
 	if return_pi:
-		cost, ll, pi = output
+		cost, ll, pi,time_cost = output
 		print('\ncost: ', cost.size(), cost)
 		print('\nll: ', ll.size(), ll)
 		print('\npi: ', pi.size(), pi)
+		print('\ntime_cost:', time_cost.size(),time_cost)
 	else:
 		print(output[0])# cost: (batch)
 		print(output[1])# ll: (batch)

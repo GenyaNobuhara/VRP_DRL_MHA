@@ -6,19 +6,40 @@ from torch.utils.data.dataset import Dataset
 from torch.utils.data import DataLoader
 
 CAPACITIES = {10: 20., 20: 30., 50: 40., 100: 50.}
-
 def generate_data(device, n_samples = 10, n_customer = 20, seed = None):
 	""" https://pytorch.org/docs/master/torch.html?highlight=rand#torch.randn
 		x[0] -- depot_xy: (batch, 2)
 		x[1] -- customer_xy: (batch, n_nodes-1, 2)
 		x[2] -- demand: (batch, n_nodes-1)
+		x[3] -- customer_readyTime: (batch, n_node-1)
+		x[4] -- customer_dueTime: (batch, n_node-1)
+		x[5] -- depot_readyTime (batch,1)
+		x[6] -- depot_dueTime(batch,1)
 	"""
 	if seed is not None:
 		torch.manual_seed(seed)
-	
+
+	customer_readyTime = torch.randint(size = (n_samples, n_customer), low = 0, high = 9, device = device,dtype=torch.float) / 10
+	customer_dueTime = customer_readyTime+0.1
+	depot_readyTime = torch.zeros((n_samples,1),dtype=torch.float)
+	depot_dueTime = torch.ones((n_samples,1))
+	print("ここまできた")
+	x = (torch.rand((n_samples, 2), device = device),
+			torch.rand((n_samples, n_customer, 2), device = device),
+			(torch.randint(size = (n_samples, n_customer), low = 1, high = 10, device = device) / CAPACITIES[n_customer]),
+			customer_readyTime,
+			customer_dueTime,
+			depot_readyTime,
+			depot_dueTime
+			)
 	return (torch.rand((n_samples, 2), device = device),
 			torch.rand((n_samples, n_customer, 2), device = device),
-			torch.randint(size = (n_samples, n_customer), low = 1, high = 10, device = device) / CAPACITIES[n_customer])
+			(torch.randint(size = (n_samples, n_customer), low = 1, high = 10, device = device) / CAPACITIES[n_customer]),
+			customer_readyTime,
+			customer_dueTime,
+			depot_readyTime,
+			depot_dueTime
+			)
 
 class Generator(Dataset):
 	""" https://github.com/utkuozbulak/pytorch-custom-dataset-examples
@@ -26,10 +47,11 @@ class Generator(Dataset):
 		https://github.com/nperlmut31/Vehicle-Routing-Problem/blob/master/dataloader.py
 	"""
 	def __init__(self, device, n_samples = 5120, n_customer = 20, seed = None):
+		print("get")
 		self.tuple = generate_data(device, n_samples, n_customer)
 
 	def __getitem__(self, idx):
-		return (self.tuple[0][idx], self.tuple[1][idx], self.tuple[2][idx])
+		return (self.tuple[0][idx], self.tuple[1][idx], self.tuple[2][idx],self.tuple[3][idx],self.tuple[4][idx],self.tuple[5][idx],self.tuple[6][idx])
 
 	def __len__(self):
 		return self.tuple[0].size(0)

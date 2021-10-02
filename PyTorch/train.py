@@ -14,7 +14,7 @@ def train(cfg, log_path = None):
 	torch.backends.cudnn.benchmark = True
 	def rein_loss(model, inputs, bs, t, device):
 		# ~ inputs = list(map(lambda x: x.to(device), inputs))
-		L, ll = model(inputs, decode_type = 'sampling')
+		L, ll,_ = model(inputs, decode_type = 'sampling')
 		b = bs[t] if bs is not None else baseline.eval(inputs, L)
 		return ((L - b.to(device)) * ll).mean(), L.mean()
 	
@@ -22,15 +22,17 @@ def train(cfg, log_path = None):
 	model.train()
 	device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 	model.to(device)
+	print("b")
 	baseline = RolloutBaseline(model, cfg.task, cfg.weight_dir, cfg.n_rollout_samples, 
 								cfg.embed_dim, cfg.n_customer, cfg.warmup_beta, cfg.wp_epochs, device)
+	print("c")
 	optimizer = optim.Adam(model.parameters(), lr = cfg.lr)
 	
 	t1 = time()
 	for epoch in range(cfg.epochs):
 		ave_loss, ave_L = 0., 0.
 		dataset = Generator(device, cfg.batch*cfg.batch_steps, cfg.n_customer)
-		
+		print("a")
 		bs = baseline.eval_all(dataset)
 		bs = bs.view(-1, cfg.batch) if bs is not None else None# bs: (cfg.batch_steps, cfg.batch) or None
 		
