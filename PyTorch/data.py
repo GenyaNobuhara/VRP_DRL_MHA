@@ -23,7 +23,6 @@ def generate_data(device, n_samples = 10, n_customer = 20, seed = None):
 	customer_dueTime = customer_readyTime+0.1
 	depot_readyTime = torch.zeros((n_samples,1),dtype=torch.float)
 	depot_dueTime = torch.ones((n_samples,1))
-	print("ここまできた")
 	x = (torch.rand((n_samples, 2), device = device),
 			torch.rand((n_samples, n_customer, 2), device = device),
 			(torch.randint(size = (n_samples, n_customer), low = 1, high = 10, device = device) / CAPACITIES[n_customer]),
@@ -47,7 +46,6 @@ class Generator(Dataset):
 		https://github.com/nperlmut31/Vehicle-Routing-Problem/blob/master/dataloader.py
 	"""
 	def __init__(self, device, n_samples = 5120, n_customer = 20, seed = None):
-		print("get")
 		self.tuple = generate_data(device, n_samples, n_customer)
 
 	def __getitem__(self, idx):
@@ -57,6 +55,47 @@ class Generator(Dataset):
 		return self.tuple[0].size(0)
 
 def data_from_txt(path):
+	if not os.path.isfile(path):
+		raise FileNotFoundError	
+	with open(path, 'r') as f:
+		lines = list(map(lambda s: s.strip(), f.readlines()))
+		customer_xy, demand = [], []
+		ZERO, DEPOT, CUSTO, DEMAND = [False for i in range(4)]
+		ZERO = True
+		for line in lines:
+			if(ZERO):
+				if(line == 'NODE_COORD_SECTION'):
+					ZERO = False
+					DEPOT = True
+
+			elif(DEPOT):
+				depot_xy = list(map(lambda k: float(k)/100., line.split()))[1:]# depot_xy.append(list(map(int, line.split()))[1:])
+				DEPOT = False
+				CUSTO = True
+				
+			elif(CUSTO):
+				if(line == 'DEMAND_SECTION'):
+					DEMAND = True
+					CUSTO = False
+					continue
+				customer_xy.append(list(map(lambda k: float(k)/100., line.split()))[1:])
+			elif(DEMAND):
+				if(line == '1 0'):
+					continue
+				elif(line == 'DEPOT_SECTION'):
+					break
+				else:
+					demand.append(list(map(lambda k: float(k)/100., line.split()))[1])# demand.append(list(map(int, line.split()))[1])
+	
+	# print(np.array(depot_xy).shape)
+	# print(np.array(customer_xy).shape)
+	# print(np.array(demand).shape)
+	
+	return (torch.tensor(np.expand_dims(np.array(depot_xy), axis = 0), dtype = torch.float), 
+			torch.tensor(np.expand_dims(np.array(customer_xy), axis = 0), dtype = torch.float), 
+			torch.tensor(np.expand_dims(np.array(demand), axis = 0), dtype = torch.float))
+
+def data_from_txt_vrptw(path):
 	if not os.path.isfile(path):
 		raise FileNotFoundError	
 	with open(path, 'r') as f:

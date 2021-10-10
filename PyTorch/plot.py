@@ -134,7 +134,7 @@ if __name__ == '__main__':
 	pretrained = pretrained.to(device)
 	pretrained.eval()
 	with torch.no_grad():
-		costs, _, pi = pretrained(data, return_pi = True, decode_type = args.decode_type)
+		costs, _, pi,time_cost = pretrained(data, return_pi = True, decode_type = args.decode_type)
 	print('costs:', costs)
 	idx_in_batch = torch.argmin(costs, dim = 0)
 	print(f'decode type:{args.decode_type}\nminimum cost: {costs[idx_in_batch]:.3f} and idx: {idx_in_batch} out of {args.batch} solutions')

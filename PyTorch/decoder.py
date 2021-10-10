@@ -57,9 +57,11 @@ class DecoderCell(nn.Module):
 			required_time = env.get_cost_path(now_node,next_node) #[batchsize]
 			T = T + required_time
 			time_cost += env.get_time_cost(next_node,T)
+			T += 1/12
 			mask, step_context, D, T = env._get_step(next_node, D, T)
 			tours.append(next_node.squeeze(1))
 			log_ps.append(log_p)
+			now_node = next_node
 			if env.visited_customer.all():
 				break
 
