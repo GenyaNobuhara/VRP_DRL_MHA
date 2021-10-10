@@ -143,7 +143,7 @@ class Env():
 	def get_cost_path(self,now_node,next_node):
 		now_d = torch.gather(input = self.xy, dim = 1, index = now_node[:,:,None].repeat(1,1,2))
 		next_d = torch.gather(input = self.xy, dim = 1, index = next_node[:,:,None].repeat(1,1,2))
-		return (now_d[:, 0] -next_d[:, 0]).norm(p = 2, dim = 1)[:,None]/9
+		return (now_d[:, 0] -next_d[:, 0]).norm(p = 2, dim = 1)[:,None]/3
 
 	def get_time_cost(self,next_node,T):
 		RT = torch.gather(input = self.readyTime, dim= 1, index = next_node)

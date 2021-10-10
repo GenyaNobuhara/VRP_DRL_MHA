@@ -19,8 +19,8 @@ def generate_data(device, n_samples = 10, n_customer = 20, seed = None):
 	if seed is not None:
 		torch.manual_seed(seed)
 
-	customer_readyTime = torch.randint(size = (n_samples, n_customer), low = 0, high = 9, device = device,dtype=torch.float) / 10
-	customer_dueTime = customer_readyTime+0.1
+	customer_readyTime = torch.rand((n_samples, n_customer), device = device)*0.84
+	customer_dueTime = customer_readyTime+0.16
 	depot_readyTime = torch.zeros((n_samples,1),dtype=torch.float)
 	depot_dueTime = torch.ones((n_samples,1))
 	x = (torch.rand((n_samples, 2), device = device),
