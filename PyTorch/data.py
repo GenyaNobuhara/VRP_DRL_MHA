@@ -19,18 +19,10 @@ def generate_data(device, n_samples = 10, n_customer = 20, seed = None):
 	if seed is not None:
 		torch.manual_seed(seed)
 
-	customer_readyTime = torch.rand((n_samples, n_customer), device = device)*0.84
-	customer_dueTime = customer_readyTime+0.16
+	customer_readyTime = torch.rand((n_samples, n_customer), device = device)*(2/3)
+	customer_dueTime = customer_readyTime+(1/3)
 	depot_readyTime = torch.zeros((n_samples,1),dtype=torch.float)
 	depot_dueTime = torch.ones((n_samples,1))
-	x = (torch.rand((n_samples, 2), device = device),
-			torch.rand((n_samples, n_customer, 2), device = device),
-			(torch.randint(size = (n_samples, n_customer), low = 1, high = 10, device = device) / CAPACITIES[n_customer]),
-			customer_readyTime,
-			customer_dueTime,
-			depot_readyTime,
-			depot_dueTime
-			)
 	return (torch.rand((n_samples, 2), device = device),
 			torch.rand((n_samples, n_customer, 2), device = device),
 			(torch.randint(size = (n_samples, n_customer), low = 1, high = 10, device = device) / CAPACITIES[n_customer]),
@@ -141,7 +133,7 @@ if __name__ == '__main__':
 	print('device-->', device)
 	
 	data = generate_data(device, n_samples = 128, n_customer = 20, seed = 123)
-	for i in range(3):
+	for i in range(len(data)):
 	 	print(data[i].dtype)# torch.float32
 	 	print(data[i].size())
 	
@@ -163,6 +155,7 @@ if __name__ == '__main__':
 	data = data_from_txt(path)
 	print('read file ...')
 	data = list(map(lambda x: x.to(device), data))
+	print(data)
 	for da in data:
 		print(data[j].dtype)# torch.float32
 		print(da.size())

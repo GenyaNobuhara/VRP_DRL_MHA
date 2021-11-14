@@ -92,11 +92,6 @@ if __name__ == '__main__':
 	print('\nll: ', ll.size(), ll)
 	print('\npi: ', pi.size(), pi)
 	print('\ntimecost:',time_cost.size(),time_cost)
-	# cnt = 0
-	# for i, k in decoder.state_dict().items():
-	# 	print(i, k.size(), torch.numel(k))
-	# 	cnt += torch.numel(k)
-	# print(cnt)
 
 	# ll.mean().backward()
 	# print(decoder.Wk1.weight.grad)
