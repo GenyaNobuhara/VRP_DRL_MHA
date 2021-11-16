@@ -36,7 +36,7 @@ class Config():
 	def __init__(self, **kwargs):	
 		for k, v in kwargs.items():
 			self.__dict__[k] = v
-		self.task = 'VRP%d_%s'%(self.n_customer, self.mode)
+		self.task = 'VRPTW%d_%s'%(self.n_customer, self.mode)
 		self.dump_date = datetime.now().strftime('%m%d_%H_%M')
 		for x in [self.log_dir, self.weight_dir, self.pkl_dir]:
 			os.makedirs(x, exist_ok = True)
@@ -82,6 +82,7 @@ def test_parser():
 	parser.add_argument('-s', '--seed', metavar = 'S', type = int, default = 123, help = 'random seed number for inference, reproducibility')
 	parser.add_argument('-t', '--txt', metavar = 'T', type = str, help = 'if you wanna test out on text file, example: ../OpenData/A-n53-k7.txt')
 	parser.add_argument('-d', '--decode_type', metavar = 'D', default = 'sampling', type = str, choices = ['greedy', 'sampling'], help = 'greedy or sampling, default sampling')
+	parser.add_argument('-st', '--sudden_time', metavar='ST',type=float,default=0,help= '往診開始時間')
 	
 	args = parser.parse_args()
 	return args

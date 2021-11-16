@@ -5,7 +5,7 @@ from tqdm import tqdm
 from torch.utils.data.dataset import Dataset
 from torch.utils.data import DataLoader
 
-CAPACITIES = {10: 20., 20: 30., 50: 40., 100: 50.}
+CAPACITIES = {10: 20.,12:20, 20: 30.,21:30., 50: 40., 100: 50.}
 def generate_data(device, n_samples = 10, n_customer = 20, seed = None):
 	""" https://pytorch.org/docs/master/torch.html?highlight=rand#torch.randn
 		x[0] -- depot_xy: (batch, 2)
@@ -21,8 +21,8 @@ def generate_data(device, n_samples = 10, n_customer = 20, seed = None):
 
 	customer_readyTime = torch.rand((n_samples, n_customer), device = device)*(2/3)
 	customer_dueTime = customer_readyTime+(1/3)
-	depot_readyTime = torch.zeros((n_samples,1),dtype=torch.float)
-	depot_dueTime = torch.ones((n_samples,1))
+	depot_readyTime = torch.zeros((n_samples,1),dtype=torch.float,device = device)
+	depot_dueTime = torch.ones((n_samples,1),device = device)
 	return (torch.rand((n_samples, 2), device = device),
 			torch.rand((n_samples, n_customer, 2), device = device),
 			(torch.randint(size = (n_samples, n_customer), low = 1, high = 10, device = device) / CAPACITIES[n_customer]),

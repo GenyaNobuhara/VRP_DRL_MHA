@@ -44,9 +44,9 @@ class DecoderCell(nn.Module):
 		selecter = {'greedy': TopKSampler(), 'sampling': CategoricalSampler()}.get(decode_type, None)
 		log_ps, tours = [], []
 		first_node = [[0]]*step_context.size()[0]
-		now_node = torch.tensor(first_node)
+		now_node = torch.tensor(first_node).to(self.device)
 		#時間コストの計算
-		time_cost = torch.tensor(first_node,dtype=torch.float)
+		time_cost = torch.tensor(first_node,dtype=torch.float).to(self.device)
 		#累積時間
 		#CTime = torch.tensor(first_node,dtype = torch.float)
 		for i in range(env.n_nodes*2):

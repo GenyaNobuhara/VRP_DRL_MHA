@@ -63,7 +63,7 @@ def train(cfg, log_path = None):
 				t1 = time()
 
 		baseline.epoch_callback(model, epoch)
-		torch.save(model.state_dict(), '%s%s_epoch%s.pt'%(cfg.weight_dir, cfg.task, epoch))
+		torch.save(model.state_dict(), '%s%s_%s_epoch%s.pt'%(cfg.weight_dir, cfg.task,cfg.dump_date,epoch))
 
 if __name__ == '__main__':
 	cfg = load_pkl(train_parser().path)
