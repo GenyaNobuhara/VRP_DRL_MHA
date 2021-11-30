@@ -1,9 +1,9 @@
 mode,train
 seed,123
-n_customer,100
-batch,128
-batch_steps,10000
-batch_verbose,100
+n_customer,20
+batch,512
+batch_steps,2500
+batch_verbose,10
 n_rollout_samples,10000
 epochs,20
 embed_dim,128
@@ -18,7 +18,7 @@ log_dir,./Csv/
 weight_dir,./Weights/
 pkl_dir,./Pkl/
 cuda_dv,0
-task,VRP100_train
-dump_date,0727_15_32
-pkl_path,./Pkl/VRP100_train.pkl
+task,VRP20_train
+dump_date,1002_16_37
+pkl_path,./Pkl/VRP20_train.pkl
 n_samples,1280000

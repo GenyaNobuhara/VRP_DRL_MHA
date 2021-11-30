@@ -14,12 +14,13 @@ class DecoderCell(nn.Module):
 		self.Wk2 = nn.Linear(embed_dim, embed_dim, bias = False)
 		self.Wq_fixed = nn.Linear(embed_dim, embed_dim, bias = False)
 		self.Wout = nn.Linear(embed_dim, embed_dim, bias = False)
-		self.Wq_step = nn.Linear(embed_dim+1, embed_dim, bias = False)
+		self.Wq_step = nn.Linear(embed_dim+2, embed_dim, bias = False)
 		
 		self.MHA = MultiHeadAttention(n_heads = n_heads, embed_dim = embed_dim, need_W = False)
 		self.SHA = DotProductAttention(clip = clip, return_logits = True, head_depth = embed_dim)
 		# SHA ==> Single Head Attention, because this layer n_heads = 1 which means no need to spilt heads
 		self.env = Env
+		self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 	def compute_static(self, node_embeddings, graph_embedding):
 		self.Q_fixed = self.Wq_fixed(graph_embedding[:,None,:])
@@ -39,31 +40,44 @@ class DecoderCell(nn.Module):
 		node_embeddings, graph_embedding = encoder_output
 		self.compute_static(node_embeddings, graph_embedding)
 		env = Env(x, node_embeddings)
-		mask, step_context, D = env._create_t1()
+		mask, step_context, D , T= env._create_t1()
 
 		selecter = {'greedy': TopKSampler(), 'sampling': CategoricalSampler()}.get(decode_type, None)
-		log_ps, tours = [], []	
+		log_ps, tours = [], []
+		first_node = [[0]]*step_context.size()[0]
+		now_node = torch.tensor(first_node).to(self.device)
+		#時間コストの計算
+		time_cost = torch.tensor(first_node,dtype=torch.float).to(self.device)
+		#累積時間
+		#CTime = torch.tensor(first_node,dtype = torch.float)
 		for i in range(env.n_nodes*2):
 			logits = self.compute_dynamic(mask, step_context)
 			log_p = torch.log_softmax(logits, dim = -1)
 			next_node = selecter(log_p)
-			mask, step_context, D = env._get_step(next_node, D)
+			#距離を計算
+			required_time = env.get_cost_path(now_node,next_node) #[batchsize]
+			T = T + required_time
+			time_cost += env.get_time_cost(next_node,T)
+			T += 1/12
+			mask, step_context, D, T = env._get_step(next_node, D, T)
 			tours.append(next_node.squeeze(1))
 			log_ps.append(log_p)
+			now_node = next_node
 			if env.visited_customer.all():
 				break
 
 		pi = torch.stack(tours, 1)
 		cost = env.get_costs(pi)
+		cost += time_cost.view(-1)
 		ll = env.get_log_likelihood(torch.stack(log_ps, 1), pi)
 		
 		if return_pi:
-			return cost, ll, pi
-		return cost, ll
+			return cost, ll, pi, time_cost
+		return cost, ll, time_cost
 
 if __name__ == '__main__':
-	batch, n_nodes, embed_dim = 5, 21, 128
-	data = generate_data(n_samples = batch, n_customer = n_nodes-1)
+	batch, n_nodes, embed_dim = 1, 11, 128
+	data = generate_data('cuda:0' if torch.cuda.is_available() else 'cpu',n_samples = batch, n_customer = n_nodes-1)
 	decoder = DecoderCell(embed_dim, n_heads = 8, clip = 10.)
 	node_embeddings = torch.rand((batch, n_nodes, embed_dim), dtype = torch.float)
 	graph_embedding = torch.rand((batch, embed_dim), dtype = torch.float)
@@ -73,16 +87,12 @@ if __name__ == '__main__':
 	# print(a.size())
 
 	decoder.train()
-	cost, ll, pi = decoder(data, encoder_output, return_pi = True, decode_type = 'sampling')
+	cost, ll, pi, time_cost = decoder(data, encoder_output, return_pi = True, decode_type = 'sampling')
+	print('\ndata: ',data)
 	print('\ncost: ', cost.size(), cost)
 	print('\nll: ', ll.size(), ll)
 	print('\npi: ', pi.size(), pi)
-
-	# cnt = 0
-	# for i, k in decoder.state_dict().items():
-	# 	print(i, k.size(), torch.numel(k))
-	# 	cnt += torch.numel(k)
-	# print(cnt)
+	print('\ntimecost:',time_cost.size(),time_cost)
 
 	# ll.mean().backward()
 	# print(decoder.Wk1.weight.grad)

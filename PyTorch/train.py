@@ -14,9 +14,9 @@ def train(cfg, log_path = None):
 	torch.backends.cudnn.benchmark = True
 	def rein_loss(model, inputs, bs, t, device):
 		# ~ inputs = list(map(lambda x: x.to(device), inputs))
-		L, ll = model(inputs, decode_type = 'sampling')
+		L, ll,time_cost = model(inputs, decode_type = 'sampling')
 		b = bs[t] if bs is not None else baseline.eval(inputs, L)
-		return ((L - b.to(device)) * ll).mean(), L.mean()
+		return ((L - b.to(device)) * ll).mean(), L.mean(),time_cost.mean()
 	
 	model = AttentionModel(cfg.embed_dim, cfg.n_encode_layers, cfg.n_heads, cfg.tanh_clipping)
 	model.train()
@@ -28,16 +28,15 @@ def train(cfg, log_path = None):
 	
 	t1 = time()
 	for epoch in range(cfg.epochs):
-		ave_loss, ave_L = 0., 0.
+		ave_loss, ave_L, ave_T = 0., 0.,0.
 		dataset = Generator(device, cfg.batch*cfg.batch_steps, cfg.n_customer)
-		
 		bs = baseline.eval_all(dataset)
 		bs = bs.view(-1, cfg.batch) if bs is not None else None# bs: (cfg.batch_steps, cfg.batch) or None
 		
 		dataloader = DataLoader(dataset, batch_size = cfg.batch, shuffle = True)
 		for t, inputs in enumerate(dataloader):
 			
-			loss, L_mean = rein_loss(model, inputs, bs, t, device)
+			loss, L_mean,T_mean= rein_loss(model, inputs, bs, t, device)
 			optimizer.zero_grad()
 			loss.backward()
 			# print('grad: ', model.Decoder.Wk1.weight.grad[0][0])
@@ -47,6 +46,7 @@ def train(cfg, log_path = None):
 			
 			ave_loss += loss.item()
 			ave_L += L_mean.item()
+			ave_T += T_mean.item()
 			
 			if t%(cfg.batch_verbose) == 0:
 				t2 = time()
@@ -58,12 +58,12 @@ def train(cfg, log_path = None):
 						with open(log_path, 'w') as f:
 							f.write('time,epoch,batch,loss,cost\n')
 					with open(log_path, 'a') as f:
-						f.write('%dmin%dsec,%d,%d,%1.3f,%1.3f\n'%(
-							(t2-t1)//60, (t2-t1)%60, epoch, t, ave_loss/(t+1), ave_L/(t+1)))
+						f.write('%dmin%dsec,%d,%d,%1.3f,%1.3f,%1.3f\n'%(
+							(t2-t1)//60, (t2-t1)%60, epoch, t, ave_loss/(t+1), ave_L/(t+1), ave_T/(t+1)))
 				t1 = time()
 
 		baseline.epoch_callback(model, epoch)
-		torch.save(model.state_dict(), '%s%s_epoch%s.pt'%(cfg.weight_dir, cfg.task, epoch))
+		torch.save(model.state_dict(), '%s%s_%s_epoch%s.pt'%(cfg.weight_dir, cfg.task,cfg.dump_date,epoch))
 
 if __name__ == '__main__':
 	cfg = load_pkl(train_parser().path)

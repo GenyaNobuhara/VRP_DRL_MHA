@@ -163,7 +163,7 @@ class RolloutBaseline:
 		for inputs in tqdm(dataloader, disable = disable_tqdm, desc = 'Rollout greedy execution'):
 			with torch.no_grad():
 				# ~ inputs = list(map(lambda x: x.to(self.device), inputs))
-				cost, _ = model(inputs, decode_type = 'greedy')
+				cost, _ ,_= model(inputs, decode_type = 'greedy')
 				# costs_list.append(cost.data.cpu())
 				costs_list.append(cost)
 		return torch.cat(costs_list, 0)
