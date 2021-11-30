@@ -19,7 +19,7 @@ class Env():
 		self.xy = torch.cat([self.depot_xy[:,None,:], customer_xy], 1).to(self.device)
 		self.readyTime = torch.cat([self.depot_readyTime, self.customer_readyTime], 1).to(self.device)
 		self.dueTime = torch.cat([self.depot_dueTime, self.customer_dueTime], 1).to(self.device)
-		self.node_embeddings = node_embeddings.to(self.device)
+		self.node_embeddings = node_embeddings
 		self.batch, self.n_nodes, self.embed_dim = node_embeddings.size()
 
 		#次にdepotに行く必要があるかどうか（0：行く必要あり,1:必要なし）

@@ -26,7 +26,7 @@ if __name__ == '__main__':
 	
 	model = AttentionModel()
 	model.train()
-	data = generate_data('cpu',n_samples = 5, n_customer = 20, seed = 123)
+	data = generate_data('cuda:0' if torch.cuda.is_available() else 'cpu',n_samples = 5, n_customer = 20, seed = 123)
 	return_pi = True
 	output = model(data, decode_type = 'sampling', return_pi = return_pi)
 	if return_pi:

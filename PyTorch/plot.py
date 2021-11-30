@@ -127,57 +127,15 @@ if __name__ == '__main__':
 		rand = [123,128,88,78,69,24,53,111,122,126]
 		all_cos = []
 		all_time_cos = []
+		all_vehicle_list = []
+		best_vehicle_list = []
 		for j in range(100):
 			data = []
+			vehicle_list = []
+			seed = j*10+8
 			for i in range(7):
-				elem = [generate_data(device, 1, args.n_customer,random.randint(1,200))[i].squeeze(0) for j in range(args.batch)]
+				elem = [generate_data(device, 1, args.n_customer,seed)[i].squeeze(0) for j in range(args.batch)]
 				data.append(torch.stack(elem, 0))
-			#print(f'data generate time:{time()-t1}s')
-			'''
-			b = [[0.2517, 0.6886],
-				[0.0740, 0.8665],
-				[0.1366, 0.1025],
-				[0.1841, 0.7264],
-				[0.3153, 0.6871],
-				[0.0756, 0.1966],
-				[0.3164, 0.4017],
-				[0.1186, 0.8274],
-				[0.3821, 0.6605],
-				[0.8536, 0.5932],
-				[0.6367, 0.9826],
-				[0.2745, 0.6584],
-				[0.2775, 0.8573],
-				[0.8993, 0.0390],
-				[0.9268, 0.7388],
-				[0.7179, 0.7058],
-				[0.9156, 0.4340],
-				[0.0772, 0.3565],
-				[0.1479, 0.5331],
-				[0.4066, 0.2318],]
-			'''
-			b = [[0,0.5],[0.1,0.4],[0.1,0.6],[0.4,0.9],[0.6,0.9],[0.5,1],[0.9,0.6],[0.9,0.4],[1,0.5],[0.4,0.1],[0.6,0.1],[0.5,0]]
-			king = []
-			king2 = []
-			d = [0.2667, 0.2667, 0.3000, 0.2667, 0.0667, 0.1000, 0.0333, 0.0333, 0.2667,
-				0.1000, 0.2333, 0.2667, 0.0333, 0.1667, 0.1000, 0.0667, 0.1333, 0.0667,
-				0.2667, 0.2000]
-			#d = [0.3]*12
-			ready = [i/30 for i in range(20)]
-			#ready = [0,1/3,2/3,2/3,1/3,0,1/3,2/3,0,0,2/3,1/3]
-			due = [ready[i]+(1/3) for i in range(20)]
-			#ready.append(np.random.rand()*(2/3))
-			#due.append(1)
-			king3 = []
-			king4 = []
-			for i in range(128):
-				king.append(b)
-				king2.append(d)
-				king3.append(ready)
-				king4.append(due)
-			#data[1] = torch.tensor(king)
-			data[2] = torch.tensor(king2)
-			#data[3] = torch.tensor(king3)
-			#data[4] = torch.tensor(king4)
 			pretrained = pretrained.to(device)
 			pretrained.eval()
 			with torch.no_grad():
@@ -190,10 +148,16 @@ if __name__ == '__main__':
 			#plot_route(data, pi, costs, 'Pretrained', idx_in_batch)
 			#print(costs[idx_in_batch])
 			#print(time_cost[idx_in_batch])
+			for i in range(128):
+				vehicle_list.append(pi[i].tolist().count(0))
+			all_vehicle_list.append(vehicle_list)
+			best_vehicle_list.append(pi[idx_in_batch].tolist().count(0))
 			all_cos.append(costs[idx_in_batch].item())
 			all_time_cos.append(time_cost[idx_in_batch][0].item())
-		print(all_cos)
-		print(all_time_cos)
+		print(best_vehicle_list)
+		#print((np.array(all_cos)-np.array(all_time_cos)).tolist())
+		#print(all_vehicle_list)
+
 		
 
 	else:
@@ -366,7 +330,7 @@ if __name__ == '__main__':
 		d = [0.2667, 0.2667, 0.3000, 0.2667, 0.0667, 0.1000, 0.0333, 0.0333, 0.2667,
 			0.1000, 0.2333, 0.2667, 0.0333, 0.1667, 0.1000, 0.0667, 0.1333, 0.0667,
 			0.2667, 0.2000]
-		d = [0.1]*12
+		#d = [0.1]*12
 		#ready = [i/30 for i in range(20)]
 		ready = [0,1/3,2/3,2/3,1/3,0,1/3,2/3,0,0,2/3,1/3]
 		due = [ready[i]+(1/3) for i in range(12)]

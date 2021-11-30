@@ -117,7 +117,7 @@ if __name__ == '__main__':
 	batch = 5
 	n_nodes = 21
 	encoder = GraphAttentionEncoder(n_layers = 1)
-	data = generate_data('cpu',n_samples = batch, n_customer = n_nodes-1)
+	data = generate_data('cuda:0' if torch.cuda.is_available() else 'cpu',n_samples = batch, n_customer = n_nodes-1)
 	# mask = torch.zeros((batch, n_nodes, 1), dtype = bool)
 	output = encoder(data, mask = None)
 	print('output[0].shape:', output[0].size())

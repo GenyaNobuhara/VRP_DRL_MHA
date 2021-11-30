@@ -20,6 +20,7 @@ class DecoderCell(nn.Module):
 		self.SHA = DotProductAttention(clip = clip, return_logits = True, head_depth = embed_dim)
 		# SHA ==> Single Head Attention, because this layer n_heads = 1 which means no need to spilt heads
 		self.env = Env
+		self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 	def compute_static(self, node_embeddings, graph_embedding):
 		self.Q_fixed = self.Wq_fixed(graph_embedding[:,None,:])
@@ -76,7 +77,7 @@ class DecoderCell(nn.Module):
 
 if __name__ == '__main__':
 	batch, n_nodes, embed_dim = 1, 11, 128
-	data = generate_data('cpu',n_samples = batch, n_customer = n_nodes-1)
+	data = generate_data('cuda:0' if torch.cuda.is_available() else 'cpu',n_samples = batch, n_customer = n_nodes-1)
 	decoder = DecoderCell(embed_dim, n_heads = 8, clip = 10.)
 	node_embeddings = torch.rand((batch, n_nodes, embed_dim), dtype = torch.float)
 	graph_embedding = torch.rand((batch, embed_dim), dtype = torch.float)
