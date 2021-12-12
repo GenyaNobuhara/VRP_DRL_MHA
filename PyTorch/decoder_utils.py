@@ -153,7 +153,7 @@ class Env():
 		DueCost = T - DT
 		DueCost = DueCost.masked_fill( DueCost < 0, 0.0)
 		time_cost = ReadyCost+DueCost
-		return time_cost*10
+		return time_cost
 
 class Sampler(nn.Module):
 	""" args; logits: (batch, n_nodes)
