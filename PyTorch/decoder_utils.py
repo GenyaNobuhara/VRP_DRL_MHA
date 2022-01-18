@@ -10,22 +10,28 @@ class Env():
 			demand: (batch, n_nodes-1)
 			node_embeddings: (batch, n_nodes, embed_dim)
 
-			is_next_depot: (batch, 1), e.g., [[True], [True], ...]
+			is_next_depot: (batch, 2), e.g., [[True], [True], ...]
 			Nodes that have been visited will be marked with True.
 		"""
 		self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-		self.depot_xy, customer_xy, self.demand, self.customer_readyTime, self.customer_dueTime,self.depot_readyTime, self.depot_dueTime = x
-		self.depot_xy, customer_xy, self.demand,  self.customer_readyTime, self.customer_dueTime, self.depot_readyTime, self.depot_dueTime= self.depot_xy.to(self.device), customer_xy.to(self.device), self.demand.to(self.device), self.customer_readyTime.to(self.device),self.customer_dueTime.to(self.device), self.depot_readyTime.to(self.device),self.depot_dueTime.to(self.device)
-		self.xy = torch.cat([self.depot_xy[:,None,:], customer_xy], 1).to(self.device)
+		self.depot_xy, customer_xy, self.demand, self.customer_readyTime, self.customer_dueTime,self.depot_readyTime, self.depot_dueTime,self.depot_gender,self.customer_gender = x
+		self.depot_xy, customer_xy, self.demand,  self.customer_readyTime, self.customer_dueTime, self.depot_readyTime, self.depot_dueTime,self.depot_gender,self.customer_gender= self.depot_xy.to(self.device),customer_xy.to(self.device), self.demand.to(self.device), self.customer_readyTime.to(self.device),self.customer_dueTime.to(self.device), self.depot_readyTime.to(self.device),self.depot_dueTime.to(self.device),self.depot_gender.to(self.device),self.customer_gender.to(self.device)
+		self.xy = torch.cat([self.depot_xy, customer_xy], 1).to(self.device)
 		self.readyTime = torch.cat([self.depot_readyTime, self.customer_readyTime], 1).to(self.device)
 		self.dueTime = torch.cat([self.depot_dueTime, self.customer_dueTime], 1).to(self.device)
+		self.gender = torch.cat([self.depot_gender, self.customer_gender],1).to(self.device)
 		self.node_embeddings = node_embeddings
 		self.batch, self.n_nodes, self.embed_dim = node_embeddings.size()
 
 		#次にdepotに行く必要があるかどうか（0：行く必要あり,1:必要なし）
 		self.is_next_depot = torch.ones([self.batch, 1], dtype = torch.bool).to(self.device)
+		self.is_next_depot0 = torch.ones([self.batch, 1], dtype = torch.bool).to(self.device)
+		self.is_next_depot1 = torch.ones([self.batch, 1], dtype = torch.bool).to(self.device)
 		#すでにおとづれた顧客
-		self.visited_customer = torch.zeros((self.batch, self.n_nodes-1, 1), dtype = torch.bool).to(self.device)
+		self.visited_customer = torch.zeros((self.batch, self.n_nodes-2, 1), dtype = torch.bool).to(self.device)
+
+		self.now_doctor = torch.zeros([self.batch, 1]).to(self.device)
+
 
 	#マスクを返す、制約条件を満たさない訪問先の可能性を消す
 	def get_mask_D_T(self,next_node, visited_mask, D, T):
@@ -43,14 +49,19 @@ class Env():
 		 	return mask: (batch, n_nodes, 1)		
 		"""
 		#次のノードがdepot:true else:false
-		self.is_next_depot = next_node == 0
+		self.is_next_depot = next_node < 2
+		self.is_next_depot0 = next_node ==0
+		self.is_next_depot1 = next_node ==1
+
 		#次に行くノードがdepotなら、１に回復する
 		D = D.masked_fill(self.is_next_depot == True, 1.0)
 		T = T.masked_fill(self.is_next_depot == True, 0.0)
+
+
 		#顧客がすでに訪問されているかどうかを調べる
-		self.visited_customer = self.visited_customer | visited_mask[:,1:,:]
+		self.visited_customer = self.visited_customer | visited_mask[:,2:,:]
 		#次におとづれるノードの顧客id
-		customer_idx = torch.argmax(visited_mask[:,1:,:].type(torch.long), dim = 1)
+		customer_idx = torch.argmax(visited_mask[:,2:,:].type(torch.long), dim = 1)
 		#その顧客の需要量
 		selected_demand = torch.gather(input = self.demand, dim = 1, index = customer_idx)
 		#積載量から、需要量をひく
@@ -63,11 +74,13 @@ class Env():
 		#キャパオーバーの顧客をマスク
 		mask_customer = capacity_over_customer[:,:,None] | self.visited_customer
 		mask_depot = self.is_next_depot & (torch.sum((mask_customer == False).type(torch.long), dim = 1) > 0)
+		mask_depot = torch.cat([mask_depot,mask_depot],1)
+		mask_depot = mask_depot.view(self.batch,2,1)
 
 		""" mask_depot = True
 			==> We cannot choose depot in the next step if 1) next destination is depot or 2) there is a node which has not been visited yet
 		"""
-		return torch.cat([mask_depot[:,None,:], mask_customer], dim = 1), D, T
+		return torch.cat([mask_depot, mask_customer], dim = 1), D, T
 	
 	def _get_step(self,next_node, D, T):
 		""" next_node **includes depot** : (batch, 1) int, range[0, n_nodes-1]
@@ -102,7 +115,7 @@ class Env():
 		#顧客のマスク
 		mask_customer = self.visited_customer.to(self.device)
 		#デポのマスク
-		mask_depot = torch.ones([self.batch, 1, 1], dtype = torch.bool).to(self.device)
+		mask_depot = torch.ones([self.batch, 2, 1], dtype = torch.bool).to(self.device)
 		return torch.cat([mask_depot, mask_customer], dim = 1)
 
 	#t1時のコンテキスト、D（積載量）、T（経過時間）を取得
@@ -135,15 +148,27 @@ class Env():
 		"""
 		d = torch.gather(input = self.xy, dim = 1, index = pi[:,:,None].repeat(1,1,2))
 		# d = torch.gather(input = self.xy, dim = 1, index = pi[:,:,None].expand(self.batch,pi.size(1),2))
-		return (torch.sum((d[:, 1:] - d[:, :-1]).norm(p = 2, dim = 2), dim = 1)
-				+ (d[:, 0] - self.depot_xy).norm(p = 2, dim = 1)# distance from depot to first selected node
-				+ (d[:, -1] - self.depot_xy).norm(p = 2, dim = 1)# distance from last selected node (!=0 for graph with longest path) to depot
+		return (torch.sum((d[:, 1:] - d[:, :-1]).norm(p = 2, dim = 2), dim = 1)+ 
+				(d[:, 0] - self.depot_xy[:,1,]).norm(p = 2, dim = 1)# distance from depot to first selected node
+				+ (d[:, -1] - self.depot_xy[:,1,]).norm(p = 2, dim = 1)# distance from last selected node (!=0 for graph with longest path) to depot
 				)
 
 	def get_cost_path(self,now_node,next_node):
 		now_d = torch.gather(input = self.xy, dim = 1, index = now_node[:,:,None].repeat(1,1,2))
 		next_d = torch.gather(input = self.xy, dim = 1, index = next_node[:,:,None].repeat(1,1,2))
 		return (now_d[:, 0] -next_d[:, 0]).norm(p = 2, dim = 1)[:,None]/3
+
+
+	def get_gender_score(self,next_node):
+		self.now_doctor = self.now_doctor.masked_fill(self.is_next_depot0 == True, 0)
+		self.now_doctor = self.now_doctor.masked_fill(self.is_next_depot1 == True, 1)
+
+		
+		d_gender = torch.gather(input = self.gender, dim = 1, index = self.now_doctor.to(torch.int64).repeat(1,1,2)).to(torch.float64)
+		p_gender = torch.gather(input = self.gender, dim = 1, index = next_node.repeat(1,1,2)).to(torch.float64)
+		gender_score = torch.bmm(d_gender.permute(1,0,2),p_gender.permute(1,2,0))
+		gender_score = gender_score.squeeze(1).masked_fill(self.is_next_depot == True,0)
+		return gender_score
 
 	def get_time_cost(self,next_node,T):
 		RT = torch.gather(input = self.readyTime, dim= 1, index = next_node)

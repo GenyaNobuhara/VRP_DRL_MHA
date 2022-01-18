@@ -17,10 +17,10 @@ class AttentionModel(nn.Module):
 		encoder_output = self.Encoder(x)
 		decoder_output = self.Decoder(x, encoder_output, return_pi = return_pi, decode_type = decode_type)
 		if return_pi:
-			cost, ll, pi,time_cost= decoder_output
-			return cost, ll, pi,time_cost
-		cost, ll,time_cost = decoder_output
-		return cost, ll,time_cost
+			cost, ll, pi,time_cost,gender_score= decoder_output
+			return cost, ll, pi,time_cost,gender_score
+		cost, ll,time_cost,gender_score = decoder_output
+		return cost, ll,time_cost,gender_score
 		
 if __name__ == '__main__':
 	
@@ -30,11 +30,11 @@ if __name__ == '__main__':
 	return_pi = True
 	output = model(data, decode_type = 'sampling', return_pi = return_pi)
 	if return_pi:
-		cost, ll, pi,time_cost = output
+		cost, ll, pi,time_cost,gender_score = output
 		print('\ncost: ', cost.size(), cost)
 		print('\nll: ', ll.size(), ll)
 		print('\npi: ', pi.size(), pi)
-		print('\ntime_cost:', time_cost.size(),time_cost)
+		print('\ntime_cost:', time_cost.size(),time_cost,gender_score)
 	else:
 		print(output[0])# cost: (batch)
 		print(output[1])# ll: (batch)

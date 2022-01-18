@@ -36,7 +36,7 @@ class Config():
 	def __init__(self, **kwargs):	
 		for k, v in kwargs.items():
 			self.__dict__[k] = v
-		self.task = 'VRPTW%d_%s'%(self.n_customer, self.mode)
+		self.task = 'VRPWM%d_%s'%(self.n_customer, self.mode)
 		self.dump_date = datetime.now().strftime('%m%d_%H_%M')
 		for x in [self.log_dir, self.weight_dir, self.pkl_dir]:
 			os.makedirs(x, exist_ok = True)
