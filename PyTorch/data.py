@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 CAPACITIES = {10: 20.,12:20, 20: 30.,21:30., 50: 30., 100: 50.,30:33,40:30}
 def generate_data(device, n_samples = 10, n_customer = 20, seed = None):
-	""" https://pytorch.org/docs/master/torch.html?highlight=rand#torch.randn
+	"""
 		x[0] -- depot_xy: (batch, 2)
 		x[1] -- customer_xy: (batch, n_nodes-1, 2)
 		x[2] -- demand: (batch, n_nodes-1)
@@ -33,10 +33,6 @@ def generate_data(device, n_samples = 10, n_customer = 20, seed = None):
 			)
 
 class Generator(Dataset):
-	""" https://github.com/utkuozbulak/pytorch-custom-dataset-examples
-		https://github.com/wouterkool/attention-learn-to-route/blob/master/problems/vrp/problem_vrp.py
-		https://github.com/nperlmut31/Vehicle-Routing-Problem/blob/master/dataloader.py
-	"""
 	def __init__(self, device, n_samples = 5120, n_customer = 20, seed = None):
 		self.tuple = generate_data(device, n_samples, n_customer)
 
@@ -61,7 +57,7 @@ def data_from_txt(path):
 					DEPOT = True
 
 			elif(DEPOT):
-				depot_xy = list(map(lambda k: float(k)/100., line.split()))[1:]# depot_xy.append(list(map(int, line.split()))[1:])
+				depot_xy = list(map(lambda k: float(k)/100., line.split()))[1:]
 				DEPOT = False
 				CUSTO = True
 				
@@ -77,11 +73,8 @@ def data_from_txt(path):
 				elif(line == 'DEPOT_SECTION'):
 					break
 				else:
-					demand.append(list(map(lambda k: float(k)/100., line.split()))[1])# demand.append(list(map(int, line.split()))[1])
+					demand.append(list(map(lambda k: float(k)/100., line.split()))[1])
 	
-	# print(np.array(depot_xy).shape)
-	# print(np.array(customer_xy).shape)
-	# print(np.array(demand).shape)
 	
 	return (torch.tensor(np.expand_dims(np.array(depot_xy), axis = 0), dtype = torch.float), 
 			torch.tensor(np.expand_dims(np.array(customer_xy), axis = 0), dtype = torch.float), 
@@ -102,7 +95,7 @@ def data_from_txt_vrptw(path):
 					DEPOT = True
 
 			elif(DEPOT):
-				depot_xy = list(map(lambda k: float(k)/100., line.split()))[1:]# depot_xy.append(list(map(int, line.split()))[1:])
+				depot_xy = list(map(lambda k: float(k)/100., line.split()))[1:]
 				DEPOT = False
 				CUSTO = True
 				
@@ -118,11 +111,8 @@ def data_from_txt_vrptw(path):
 				elif(line == 'DEPOT_SECTION'):
 					break
 				else:
-					demand.append(list(map(lambda k: float(k)/100., line.split()))[1])# demand.append(list(map(int, line.split()))[1])
+					demand.append(list(map(lambda k: float(k)/100., line.split()))[1])
 	
-	# print(np.array(depot_xy).shape)
-	# print(np.array(customer_xy).shape)
-	# print(np.array(demand).shape)
 	
 	return (torch.tensor(np.expand_dims(np.array(depot_xy), axis = 0), dtype = torch.float), 
 			torch.tensor(np.expand_dims(np.array(customer_xy), axis = 0), dtype = torch.float), 
@@ -134,7 +124,7 @@ if __name__ == '__main__':
 	
 	data = generate_data(device, n_samples = 128, n_customer = 20, seed = 123)
 	for i in range(len(data)):
-	 	print(data[i].dtype)# torch.float32
+	 	print(data[i].dtype)
 	 	print(data[i].size())
 	
 	
@@ -146,16 +136,7 @@ if __name__ == '__main__':
 	print('use datalodaer ...')
 	for i, data in enumerate(dataloader):
 		for j in range(len(data)):
-			print(data[j].dtype)# torch.float32
+			print(data[j].dtype)
 			print(data[j].size())	
 		if i == 0:
 			break
-
-	path = '../OpenData/A-n53-k7.txt'
-	data = data_from_txt(path)
-	print('read file ...')
-	data = list(map(lambda x: x.to(device), data))
-	print(data)
-	for da in data:
-		print(data[j].dtype)# torch.float32
-		print(da.size())

@@ -36,15 +36,11 @@ if __name__ == '__main__':
 		print('\npi: ', pi.size(), pi)
 		print('\ntime_cost:', time_cost.size(),time_cost)
 	else:
-		print(output[0])# cost: (batch)
-		print(output[1])# ll: (batch)
+		print(output[0])
+		print(output[1])
 
 	cnt = 0
 	for i, k in model.state_dict().items():
 		print(i, k.size(), torch.numel(k))
 		cnt += torch.numel(k)
 	print('total parameters:', cnt)
-
-	# output[1].mean().backward()
-	# print(model.Decoder.Wout.weight.grad)
-	# print(model.Encoder.init_W_depot.weight.grad)

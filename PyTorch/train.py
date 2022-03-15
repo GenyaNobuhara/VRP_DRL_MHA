@@ -13,7 +13,6 @@ from config import Config, load_pkl, train_parser
 def train(cfg, log_path = None):
 	torch.backends.cudnn.benchmark = True
 	def rein_loss(model, inputs, bs, t, device):
-		# ~ inputs = list(map(lambda x: x.to(device), inputs))
 		L, ll,time_cost = model(inputs, decode_type = 'sampling')
 		b = bs[t] if bs is not None else baseline.eval(inputs, L)
 		return ((L - b.to(device)) * ll).mean(), L.mean(),time_cost.mean()
@@ -31,7 +30,7 @@ def train(cfg, log_path = None):
 		ave_loss, ave_L, ave_T = 0., 0.,0.
 		dataset = Generator(device, cfg.batch*cfg.batch_steps, cfg.n_customer)
 		bs = baseline.eval_all(dataset)
-		bs = bs.view(-1, cfg.batch) if bs is not None else None# bs: (cfg.batch_steps, cfg.batch) or None
+		bs = bs.view(-1, cfg.batch) if bs is not None else None
 		
 		dataloader = DataLoader(dataset, batch_size = cfg.batch, shuffle = True)
 		for t, inputs in enumerate(dataloader):
@@ -39,8 +38,6 @@ def train(cfg, log_path = None):
 			loss, L_mean,T_mean= rein_loss(model, inputs, bs, t, device)
 			optimizer.zero_grad()
 			loss.backward()
-			# print('grad: ', model.Decoder.Wk1.weight.grad[0][0])
-			# https://github.com/wouterkool/attention-learn-to-route/blob/master/train.py
 			nn.utils.clip_grad_norm_(model.parameters(), max_norm = 1.0, norm_type = 2)
 			optimizer.step()
 			
@@ -54,7 +51,7 @@ def train(cfg, log_path = None):
 					epoch, t, ave_loss/(t+1), ave_L/(t+1), (t2-t1)//60, (t2-t1)%60))
 				if cfg.islogger:
 					if log_path is None:
-						log_path = '%s%s_%s.csv'%(cfg.log_dir, cfg.task, cfg.dump_date)#cfg.log_dir = ./Csv/
+						log_path = '%s%s_%s.csv'%(cfg.log_dir, cfg.task, cfg.dump_date)
 						with open(log_path, 'w') as f:
 							f.write('time,epoch,batch,loss,cost\n')
 					with open(log_path, 'a') as f:

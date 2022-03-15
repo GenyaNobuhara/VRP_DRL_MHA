@@ -13,14 +13,7 @@ from plot import get_clean_path
 from utils import get_doctor_position,set_route_greedy,get_costs,set_route_queue,set_route_go_back
 
 def plot_route(data, pi, costs, title):
-	"""Plots journey of agent
-	Args:
-		data: dataset of graphs
-		pi: (batch, decode_step) # tour
-		idx_in_batch: index of graph in data to be plotted
-	"""
 	cost = costs[idx_in_batch].cpu().numpy()
-	# Remove extra zeros
 	pi_ = pi
 
 	depot_xy = data[0][idx_in_batch].cpu().numpy()
@@ -28,12 +21,10 @@ def plot_route(data, pi, costs, title):
 	demands = data[2][idx_in_batch].cpu().numpy()
 	readyTime = data[3][idx_in_batch].cpu().numpy()
 	dueTime = data[4][idx_in_batch].cpu().numpy()
-	# customer_labels = ['(' + str(i) + ', ' + str(demand) + ')' for i, demand in enumerate(demands.round(2), 1)]
 	customer_labels = ['(' + str(np.round(i+1,2))+ ')' for i in range(len(dueTime))]
 	
 	xy = np.concatenate([depot_xy.reshape(1, 2), customer_xy], axis = 0)
 
-	# Get list with agent loops in path
 	list_of_paths, cur_path = [], []
 	for idx, node in enumerate(pi_):
 
@@ -49,7 +40,6 @@ def plot_route(data, pi, costs, title):
 	for i, path in enumerate(list_of_paths, 1):
 		coords = xy[[int(x) for x in path]]
 
-		# Calculate length of each agent loop
 		lengths = np.sqrt(np.sum(np.diff(coords, axis = 0) ** 2, axis = 1))
 		total_length = np.sum(lengths)
 
@@ -80,9 +70,7 @@ def plot_route(data, pi, costs, title):
 							)
 	
 	layout = go.Layout(
-		title = dict(text = f'<b>{title}, Total Length = {cost:.3f}</b>', x = 0.5, y = 1, yanchor = 'bottom', yref = 'paper', pad = dict(b = 10)),#https://community.plotly.com/t/specify-title-position/13439/3
-						# xaxis = dict(title = 'X', ticks='outside'),
-						# yaxis = dict(title = 'Y', ticks='outside'),#https://kamino.hatenablog.com/entry/plotly_for_report
+		title = dict(text = f'<b>{title}, Total Length = {cost:.3f}</b>', x = 0.5, y = 1, yanchor = 'bottom', yref = 'paper', pad = dict(b = 10)),
 						xaxis = dict(title = 'X', range = [-0.1, 1.1], showgrid=False, ticks='outside', linewidth=1, mirror=True),
 						yaxis = dict(title = 'Y', range = [-0.1, 1.1], showgrid=False, ticks='outside', linewidth=1, mirror=True),
 						showlegend = False,
@@ -91,7 +79,6 @@ def plot_route(data, pi, costs, title):
 						autosize = True,
 						template = "plotly_white",
 						legend = dict(x = 1, xanchor = 'right', y =0, yanchor = 'bottom', bordercolor = '#444', borderwidth = 0)
-						# legend = dict(x = 0, xanchor = 'left', y =0, yanchor = 'bottom', bordercolor = '#444', borderwidth = 0)
 						)
 
 	data = [trace_points, trace_depo] + path_traces

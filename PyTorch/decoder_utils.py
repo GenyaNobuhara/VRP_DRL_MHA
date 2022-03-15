@@ -64,9 +64,6 @@ class Env():
 		mask_customer = capacity_over_customer[:,:,None] | self.visited_customer
 		mask_depot = self.is_next_depot & (torch.sum((mask_customer == False).type(torch.long), dim = 1) > 0)
 
-		""" mask_depot = True
-			==> We cannot choose depot in the next step if 1) next destination is depot or 2) there is a node which has not been visited yet
-		"""
 		return torch.cat([mask_depot[:,None,:], mask_customer], dim = 1), D, T
 	
 	def _get_step(self,next_node, D, T):
@@ -115,8 +112,6 @@ class Env():
 		depot_idx = torch.zeros([self.batch, 1], dtype = torch.long).to(self.device)# long == int64
 		#node_embeddingからdepotの部分を抽出
 		depot_embedding = torch.gather(input = self.node_embeddings, dim = 1, index = depot_idx[:,:,None].repeat(1,1,self.embed_dim))# [10, 1, 128]
-		# depot_embedding = torch.gather(input = self.node_embeddings, dim = 1, index = depot_idx[:,:,None].expand(self.batch,1,self.embed_dim))
-		# https://medium.com/analytics-vidhya/understanding-indexing-with-pytorch-gather-33717a84ebc4
 
 		return torch.cat([depot_embedding, D_t1[:,:,None],T_t1[:,:,None]], dim = -1), D_t1, T_t1 # [10, 1, 129]depot_embeddingに積載量を追加
 
@@ -167,7 +162,7 @@ class Sampler(nn.Module):
 		
 class TopKSampler(Sampler):
 	def forward(self, logits):
-		return torch.topk(logits, self.n_samples, dim = 1)[1]# == torch.argmax(log_p, dim = 1).unsqueeze(-1)
+		return torch.topk(logits, self.n_samples, dim = 1)[1]
 
 class CategoricalSampler(Sampler):
 	def forward(self, logits):

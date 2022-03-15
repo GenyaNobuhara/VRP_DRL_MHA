@@ -18,7 +18,6 @@ class DecoderCell(nn.Module):
 		
 		self.MHA = MultiHeadAttention(n_heads = n_heads, embed_dim = embed_dim, need_W = False)
 		self.SHA = DotProductAttention(clip = clip, return_logits = True, head_depth = embed_dim)
-		# SHA ==> Single Head Attention, because this layer n_heads = 1 which means no need to spilt heads
 		self.env = Env
 		self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -46,7 +45,7 @@ class DecoderCell(nn.Module):
 		log_ps, tours = [], []
 		first_node = [[0]]*step_context.size()[0]
 		now_node = torch.tensor(first_node).to(self.device)
-		#時間コストの計算
+		#時間ペナルティの計算
 		time_cost = torch.tensor(first_node,dtype=torch.float).to(self.device)
 		#累積時間
 		#CTime = torch.tensor(first_node,dtype = torch.float)
@@ -68,7 +67,9 @@ class DecoderCell(nn.Module):
 
 		pi = torch.stack(tours, 1)
 		cost = env.get_costs(pi)
-		cost += time_cost.view(-1)
+		#時間ペナルティの追加
+		alpha = 0.5
+		cost = alpha*time_cost.view(-1) + (1-alpha)*cost
 		ll = env.get_log_likelihood(torch.stack(log_ps, 1), pi)
 		
 		if return_pi:
@@ -82,9 +83,6 @@ if __name__ == '__main__':
 	node_embeddings = torch.rand((batch, n_nodes, embed_dim), dtype = torch.float)
 	graph_embedding = torch.rand((batch, embed_dim), dtype = torch.float)
 	encoder_output = (node_embeddings, graph_embedding)
-	# a = graph_embedding[:,None,:].expand(batch, 7, embed_dim)
-	# a = graph_embedding[:,None,:].repeat(1, 7, 1)
-	# print(a.size())
 
 	decoder.train()
 	cost, ll, pi, time_cost = decoder(data, encoder_output, return_pi = True, decode_type = 'sampling')
@@ -93,7 +91,3 @@ if __name__ == '__main__':
 	print('\nll: ', ll.size(), ll)
 	print('\npi: ', pi.size(), pi)
 	print('\ntimecost:',time_cost.size(),time_cost)
-
-	# ll.mean().backward()
-	# print(decoder.Wk1.weight.grad)
-	# https://discuss.pytorch.org/t/model-param-grad-is-none-how-to-debug/52634	
