@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import random
 
 from model import AttentionModel
-from data import generate_data, data_from_txt
+from data import generate_data
 from baseline import load_model
 from config import test_parser
 
@@ -26,9 +26,9 @@ def get_clean_path(arr):
 		p2 += 1
 
 	if output[0] != 0:
-		output.insert(0, 0)# insert 0 in 0th of the array
+		output.insert(0, 0)
 	if output[-1] != 0:
-		output.append(0)# insert 0 at the end of the array
+		output.append(0)
 	return output
 
 def plot_route(data, pi, costs, title, idx_in_batch = 0):
@@ -39,7 +39,7 @@ def plot_route(data, pi, costs, title, idx_in_batch = 0):
 		idx_in_batch: index of graph in data to be plotted
 	"""
 	cost = costs[idx_in_batch].cpu().numpy()
-	# Remove extra zeros
+
 	pi_ = get_clean_path(pi[idx_in_batch].cpu().numpy())
 
 	depot_xy = data[0][idx_in_batch].cpu().numpy()
@@ -52,7 +52,6 @@ def plot_route(data, pi, costs, title, idx_in_batch = 0):
 	
 	xy = np.concatenate([depot_xy.reshape(1, 2), customer_xy], axis = 0)
 
-	# Get list with agent loops in path
 	list_of_paths, cur_path = [], []
 	for idx, node in enumerate(pi_):
 
@@ -68,7 +67,6 @@ def plot_route(data, pi, costs, title, idx_in_batch = 0):
 	for i, path in enumerate(list_of_paths, 1):
 		coords = xy[[int(x) for x in path]]
 
-		# Calculate length of each agent loop
 		lengths = np.sqrt(np.sum(np.diff(coords, axis = 0) ** 2, axis = 1))
 		total_length = np.sum(lengths)
 
@@ -99,9 +97,6 @@ def plot_route(data, pi, costs, title, idx_in_batch = 0):
 							)
 	
 	layout = go.Layout(
-		#title = dict(text = f'<b>VRP{customer_xy.shape[0]} {title}, Total Length = {cost:.3f}</b>', x = 0.5, y = 1, yanchor = 'bottom', yref = 'paper', pad = dict(b = 10)),#https://community.plotly.com/t/specify-title-position/13439/3
-						# xaxis = dict(title = 'X', ticks='outside'),
-						# yaxis = dict(title = 'Y', ticks='outside'),#https://kamino.hatenablog.com/entry/plotly_for_report
 						xaxis = dict(title = 'X', range = [-0.1, 1.1], showgrid=False, ticks='outside', linewidth=1, mirror=True),
 						yaxis = dict(title = 'Y', range = [-0.1, 1.1], showgrid=False, ticks='outside', linewidth=1, mirror=True),
 						showlegend = False,
@@ -110,7 +105,6 @@ def plot_route(data, pi, costs, title, idx_in_batch = 0):
 						autosize = True,
 						template = "plotly_white",
 						legend = dict(x = 1, xanchor = 'right', y =0, yanchor = 'bottom', bordercolor = '#444', borderwidth = 0)
-						# legend = dict(x = 0, xanchor = 'left', y =0, yanchor = 'bottom', bordercolor = '#444', borderwidth = 0)
 						)
 
 	data = [trace_points, trace_depo] + path_traces
@@ -136,43 +130,314 @@ if __name__ == '__main__':
 			for i in range(9):
 				elem = [generate_data(device, 1, args.n_customer,seed)[i].squeeze(0) for j in range(args.batch)]
 				data.append(torch.stack(elem, 0))
+			ready = [i/30 for i in range(20)]
+			due = [ready[i]+(1/3) for i in range(20)]
+			king3 = []
+			king4 = []
+			data[0] = torch.tensor([[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			])
+			for k in range(128):
+				king3.append(ready)
+				king4.append(due)
+			data[3] = torch.tensor(king3)
+			data[4] = torch.tensor(king4)
 			pretrained = pretrained.to(device)
 			pretrained.eval()
 			with torch.no_grad():
 				costs, _, pi,time_cost,gender_score = pretrained(data, return_pi = True, decode_type = args.decode_type)
-			#print('costs:', costs)
-			#print('time_costs:',time_cost)
 			idx_in_batch = torch.argmin(costs, dim = 0)
-			#print(f'decode type:{args.decode_type}\nminimum cost: {costs[idx_in_batch]:.3f} and idx: {idx_in_batch} out of {args.batch} solutions')
-			#print(f'{pi[idx_in_batch]}\ninference time: {time()-t1}s')
-			#plot_route(data, pi, costs, 'Pretrained', idx_in_batch)
-			#print(costs[idx_in_batch])
-			#print(time_cost[idx_in_batch])
-			print(pi[idx_in_batch])
 			for i in range(128):
 				vehicle_list.append(pi[i].tolist().count(0))
 			all_vehicle_list.append(vehicle_list)
 			best_vehicle_list.append(pi[idx_in_batch].tolist().count(0))
 			all_cos.append(costs[idx_in_batch].item())
 			all_time_cos.append(time_cost[idx_in_batch][0].item())
-		print(best_vehicle_list)
-		#print((np.array(all_cos)-np.array(all_time_cos)).tolist())
-		#print(all_vehicle_list)
+		#print(best_vehicle_list)
+		print((np.array(all_cos)-np.array(all_time_cos)).tolist())
+		#print(all_cos)
+		#print(all_time_cos)
 
-	else:
-		if args.txt is not None:
-			datatxt = data_from_txt(args.txt)
-			data = []
-			for i in range(7):
-				elem = [datatxt[i].squeeze(0) for j in range(args.batch)]
-				data.append(torch.stack(elem, 0))
-				data = list(map(lambda x: x.to(device), data))
-		else:
-			data = []
-			for i in range(9):
-				elem = [generate_data(device, 1, args.n_customer, args.seed)[i].squeeze(0) for j in range(args.batch)]
-				data.append(torch.stack(elem, 0))
+		data = []
+		for i in range(9):
+			elem = [generate_data(device, 1, args.n_customer, args.seed)[i].squeeze(0) for j in range(args.batch)]
+			data.append(torch.stack(elem, 0))
 		print(f'data generate time:{time()-t1}s')
+		data[0] = torch.tensor([[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5],
+			[0.5,0.5]])
+		king = []
+		king2 = []
+		d = [0.2667, 0.2667, 0.3000, 0.2667, 0.0667, 0.1000, 0.0333, 0.0333, 0.2667,
+			0.1000, 0.2333, 0.2667, 0.0333, 0.1667, 0.1000, 0.0667, 0.1333, 0.0667,
+			0.2667, 0.2000]
+		d = [0.15]*20
+		ready = [i/30 for i in range(20)]
+		#ready = [0,1/3,2/3,2/3,1/3,0,1/3,2/3,0,0,2/3,1/3]
+		due = [ready[i]+(1/3) for i in range(20)]
+		#ready.append(np.random.rand()*(2/3))
+		#due.append(1)
+		king3 = []
+		king4 = []
+		for i in range(128):
+			king2.append(d)
+			king3.append(ready)
+			king4.append(due)
+		#data[1] = torch.tensor(king)
+		#data[2] = torch.tensor(king2)
+		data[3] = torch.tensor(king3)
+		data[4] = torch.tensor(king4)
 		pretrained = pretrained.to(device)
 		pretrained.eval()
 		with torch.no_grad():

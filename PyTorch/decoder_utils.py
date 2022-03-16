@@ -77,9 +77,6 @@ class Env():
 		mask_depot = torch.cat([mask_depot,mask_depot],1)
 		mask_depot = mask_depot.view(self.batch,2,1)
 
-		""" mask_depot = True
-			==> We cannot choose depot in the next step if 1) next destination is depot or 2) there is a node which has not been visited yet
-		"""
 		return torch.cat([mask_depot, mask_customer], dim = 1), D, T
 	
 	def _get_step(self,next_node, D, T):
@@ -99,7 +96,6 @@ class Env():
 		self.demand = self.demand.masked_fill(self.visited_customer[:,:,0] == True, 0.0)
 		
 		prev_node_embedding = torch.gather(input = self.node_embeddings, dim = 1, index = next_node[:,:,None].repeat(1,1,self.embed_dim))
-		# prev_node_embedding = torch.gather(input = self.node_embeddings, dim = 1, index = next_node[:,:,None].expand(self.batch,1,self.embed_dim))
 
 		step_context = torch.cat([prev_node_embedding, D[:,:,None],T[:,:,None]], dim = -1)
 		return mask, step_context, D, T
@@ -128,10 +124,8 @@ class Env():
 		depot_idx = torch.zeros([self.batch, 1], dtype = torch.long).to(self.device)# long == int64
 		#node_embeddingからdepotの部分を抽出
 		depot_embedding = torch.gather(input = self.node_embeddings, dim = 1, index = depot_idx[:,:,None].repeat(1,1,self.embed_dim))# [10, 1, 128]
-		# depot_embedding = torch.gather(input = self.node_embeddings, dim = 1, index = depot_idx[:,:,None].expand(self.batch,1,self.embed_dim))
-		# https://medium.com/analytics-vidhya/understanding-indexing-with-pytorch-gather-33717a84ebc4
 
-		return torch.cat([depot_embedding, D_t1[:,:,None],T_t1[:,:,None]], dim = -1), D_t1, T_t1 # [10, 1, 129]depot_embeddingに積載量を追加
+		return torch.cat([depot_embedding, D_t1[:,:,None],T_t1[:,:,None]], dim = -1), D_t1, T_t1
 
 	def get_log_likelihood(self, _log_p, pi):
 		""" _log_p: (batch, decode_step, n_nodes)
@@ -149,8 +143,8 @@ class Env():
 		d = torch.gather(input = self.xy, dim = 1, index = pi[:,:,None].repeat(1,1,2))
 		# d = torch.gather(input = self.xy, dim = 1, index = pi[:,:,None].expand(self.batch,pi.size(1),2))
 		return (torch.sum((d[:, 1:] - d[:, :-1]).norm(p = 2, dim = 2), dim = 1)+ 
-				(d[:, 0] - self.depot_xy[:,1,]).norm(p = 2, dim = 1)# distance from depot to first selected node
-				+ (d[:, -1] - self.depot_xy[:,1,]).norm(p = 2, dim = 1)# distance from last selected node (!=0 for graph with longest path) to depot
+				(d[:, 0] - self.depot_xy[:,1,]).norm(p = 2, dim = 1)
+				+ (d[:, -1] - self.depot_xy[:,1,]).norm(p = 2, dim = 1)
 				)
 
 	def get_cost_path(self,now_node,next_node):
@@ -192,7 +186,7 @@ class Sampler(nn.Module):
 		
 class TopKSampler(Sampler):
 	def forward(self, logits):
-		return torch.topk(logits, self.n_samples, dim = 1)[1]# == torch.argmax(log_p, dim = 1).unsqueeze(-1)
+		return torch.topk(logits, self.n_samples, dim = 1)[1]
 
 class CategoricalSampler(Sampler):
 	def forward(self, logits):

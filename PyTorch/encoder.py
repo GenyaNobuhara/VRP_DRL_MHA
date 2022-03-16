@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-# from torchsummary import summary
 
 from layers import MultiHeadAttention
 from data import generate_data
@@ -15,19 +14,10 @@ class Normalization(nn.Module):
 			'batch': nn.BatchNorm1d,
 			'instance': nn.InstanceNorm1d}.get(normalization, None)
 		self.normalizer = normalizer_class(embed_dim, affine=True)
-		# Normalization by default initializes affine parameters with bias 0 and weight unif(0,1) which is too large!
-	# 	self.init_parameters()
-
-	# def init_parameters(self):
-	# 	for name, param in self.named_parameters():
-	# 		stdv = 1. / math.sqrt(param.size(-1))
-	# 		param.data.uniform_(-stdv, stdv)
 
 	def forward(self, x):
 
 		if isinstance(self.normalizer, nn.BatchNorm1d):
-			# (batch, num_features)
-			# https://discuss.pytorch.org/t/batch-normalization-of-linear-layers/20989
 			return self.normalizer(x.view(-1, x.size(-1))).view(*x.size())
 		
 		elif isinstance(self.normalizer, nn.InstanceNorm1d):
@@ -118,18 +108,13 @@ if __name__ == '__main__':
 	n_nodes = 22
 	encoder = GraphAttentionEncoder(n_layers = 1)
 	data = generate_data('cuda:0' if torch.cuda.is_available() else 'cpu',n_samples = batch, n_customer = 20)
-	# mask = torch.zeros((batch, n_nodes, 1), dtype = bool)
 	output = encoder(data, mask = None)
 	print('output[0].shape:', output[0].size())
 	print('output[1].shape', output[1].size())
 	
-	# summary(encoder, [(2), (20,2), (20)])
 	cnt = 0
 	for i, k in encoder.state_dict().items():
 		print(i, k.size(), torch.numel(k))
 		cnt += torch.numel(k)
 	print(cnt)
-
-	# output[0].mean().backward()
-	# print(encoder.init_W_depot.weight.grad)
 

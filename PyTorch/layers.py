@@ -9,7 +9,6 @@ class DotProductAttention(nn.Module):
 		self.return_logits = return_logits
 		self.inf = inf
 		self.scale = math.sqrt(head_depth)
-		# self.tanh = nn.Tanh() 
 
 	def forward(self, x, mask = None):
 		""" Q: (batch, n_heads, q_seq(=n_nodes or =1), head_depth)
@@ -65,13 +64,6 @@ class MultiHeadAttention(nn.Module):
 			param.data.uniform_(-stdv, stdv)
 
 	def split_heads(self, T):
-		""" https://qiita.com/halhorn/items/c91497522be27bde17ce
-			T: (batch, n_nodes, self.embed_dim)
-			T reshaped: (batch, n_nodes, self.n_heads, self.head_depth)
-			return: (batch, self.n_heads, n_nodes, self.head_depth)
-			
-			https://raishi12.hatenablog.com/entry/2020/04/20/221905
-		"""
 		shape = T.size()[:-1] + (self.n_heads, self.head_depth)
 		T = T.view(*shape)
 		return T.permute(0,2,1,3)
@@ -106,7 +98,6 @@ class MultiHeadAttention(nn.Module):
 if __name__ == '__main__':
 	mha = MultiHeadAttention(n_heads = 8, embed_dim = 128, need_W = True)
 	batch, n_nodes, embed_dim = 5, 21, 128
-	# x = torch.randn((batch, n_nodes, embed_dim))
 	x = torch.randn((batch, n_nodes, embed_dim), dtype = torch.float)
 	mask = torch.zeros((batch, n_nodes, 1), dtype = torch.bool)
 	output = mha([x,x,x], mask = mask)

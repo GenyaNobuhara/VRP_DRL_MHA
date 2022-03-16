@@ -18,7 +18,6 @@ class DecoderCell(nn.Module):
 		
 		self.MHA = MultiHeadAttention(n_heads = n_heads, embed_dim = embed_dim, need_W = False)
 		self.SHA = DotProductAttention(clip = clip, return_logits = True, head_depth = embed_dim)
-		# SHA ==> Single Head Attention, because this layer n_heads = 1 which means no need to spilt heads
 		self.env = Env
 		self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -57,9 +56,9 @@ class DecoderCell(nn.Module):
 			next_node = selecter(log_p)
 
 			#距離を計算
-			#required_time = env.get_cost_path(now_node,next_node) #[batchsize]
-			#T = T + required_time
-			#time_cost += env.get_time_cost(next_node,T)
+			required_time = env.get_cost_path(now_node,next_node) #[batchsize]
+			T = T + required_time
+			time_cost += env.get_time_cost(next_node,T)
 
 			#性別のスコアを表示
 			gender_score += env.get_gender_score(next_node)
@@ -74,8 +73,10 @@ class DecoderCell(nn.Module):
 
 		pi = torch.stack(tours, 1)
 		cost = env.get_costs(pi)
-		#cost -= gender_score.squeeze(1)
-		#cost += time_cost.view(-1)
+		cost -= gender_score.squeeze(1)
+		cost += time_cost.view(-1)
+
+		#cost = 
 		ll = env.get_log_likelihood(torch.stack(log_ps, 1), pi)
 		
 		if return_pi:
@@ -89,9 +90,6 @@ if __name__ == '__main__':
 	node_embeddings = torch.rand((batch, n_nodes, embed_dim), dtype = torch.float)
 	graph_embedding = torch.rand((batch, embed_dim), dtype = torch.float)
 	encoder_output = (node_embeddings, graph_embedding)
-	# a = graph_embedding[:,None,:].expand(batch, 7, embed_dim)
-	# a = graph_embedding[:,None,:].repeat(1, 7, 1)
-	# print(a.size())
 
 	decoder.train()
 	cost, ll, pi, time_cost,gender_score = decoder(data, encoder_output, return_pi = True, decode_type = 'sampling')
@@ -101,7 +99,3 @@ if __name__ == '__main__':
 	print('\npi: ', pi.size(), pi)
 	print('\ntimecost:',time_cost.size(),time_cost)
 	print('\ngendercost:',gender_score.size(),gender_score)
-
-	# ll.mean().backward()
-	# print(decoder.Wk1.weight.grad)
-	# https://discuss.pytorch.org/t/model-param-grad-is-none-how-to-debug/52634	
