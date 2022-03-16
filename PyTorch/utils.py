@@ -5,9 +5,6 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
 from model import AttentionModel
-from data import generate_data, data_from_txt
-from baseline import load_model
-from config import test_parser
 
 def get_near_doctor(doctors,patient):
 	"""Returns extra zeros from path.

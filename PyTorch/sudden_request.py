@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import random
 
 from model import AttentionModel
-from data import generate_data, data_from_txt
+from data import generate_data
 from baseline import load_model
 from config import test_parser
 from plot import get_clean_path
@@ -104,18 +104,10 @@ if __name__ == '__main__':
             vehicle_list = []
             seed = j*10+8
             #print(f'model loading time:{time()-t1}s')
-            if args.txt is not None:
-                datatxt = data_from_txt(args.txt)
-                data = []
-                for i in range(7):
-                    elem = [datatxt[i].squeeze(0) for j in range(args.batch)]
-                    data.append(torch.stack(elem, 0))
-                    data = list(map(lambda x: x.to(device), data))
-            else:
-                data = []
-                for i in range(7):
-                    elem = [generate_data(device, 1, args.n_customer, seed)[i].squeeze(0) for j in range(args.batch)]
-                    data.append(torch.stack(elem, 0))
+            data = []
+            for i in range(7):
+                elem = [generate_data(device, 1, args.n_customer, seed)[i].squeeze(0) for j in range(args.batch)]
+                data.append(torch.stack(elem, 0))
             #print(f'data generate time:{time()-t1}s')
             centre = [0.5,0.5]
             b = data[1][0].cpu().tolist()

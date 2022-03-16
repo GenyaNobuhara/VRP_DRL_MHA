@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import random
 
 from model import AttentionModel
-from data import generate_data, data_from_txt
+from data import generate_data
 from baseline import load_model
 from config import test_parser
 
@@ -256,8 +256,8 @@ if __name__ == '__main__':
 			for k in range(128):
 				king3.append(ready)
 				king4.append(due)
-			#data[3] = torch.tensor(king3)
-			#data[4] = torch.tensor(king4)
+			data[3] = torch.tensor(king3)
+			data[4] = torch.tensor(king4)
 			pretrained = pretrained.to(device)
 			pretrained.eval()
 			with torch.no_grad():
@@ -270,25 +270,17 @@ if __name__ == '__main__':
 			all_cos.append(costs[idx_in_batch].item())
 			all_time_cos.append(time_cost[idx_in_batch][0].item())
 		#print(best_vehicle_list)
-		#print((np.array(all_cos)-np.array(all_time_cos)).tolist())
+		print((np.array(all_cos)-np.array(all_time_cos)).tolist())
 		#print(all_cos)
 		#print(all_time_cos)
 
 		
 
 	else:
-		if args.txt is not None:
-			datatxt = data_from_txt(args.txt)
-			data = []
-			for i in range(7):
-				elem = [datatxt[i].squeeze(0) for j in range(args.batch)]
-				data.append(torch.stack(elem, 0))
-				data = list(map(lambda x: x.to(device), data))
-		else:
-			data = []
-			for i in range(7):
-				elem = [generate_data(device, 1, args.n_customer, args.seed)[i].squeeze(0) for j in range(args.batch)]
-				data.append(torch.stack(elem, 0))
+		data = []
+		for i in range(7):
+			elem = [generate_data(device, 1, args.n_customer, args.seed)[i].squeeze(0) for j in range(args.batch)]
+			data.append(torch.stack(elem, 0))
 		print(f'data generate time:{time()-t1}s')
 		data[0] = torch.tensor([[0.5,0.5],
 			[0.5,0.5],

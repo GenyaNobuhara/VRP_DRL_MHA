@@ -42,81 +42,6 @@ class Generator(Dataset):
 	def __len__(self):
 		return self.tuple[0].size(0)
 
-def data_from_txt(path):
-	if not os.path.isfile(path):
-		raise FileNotFoundError	
-	with open(path, 'r') as f:
-		lines = list(map(lambda s: s.strip(), f.readlines()))
-		customer_xy, demand = [], []
-		ZERO, DEPOT, CUSTO, DEMAND = [False for i in range(4)]
-		ZERO = True
-		for line in lines:
-			if(ZERO):
-				if(line == 'NODE_COORD_SECTION'):
-					ZERO = False
-					DEPOT = True
-
-			elif(DEPOT):
-				depot_xy = list(map(lambda k: float(k)/100., line.split()))[1:]
-				DEPOT = False
-				CUSTO = True
-				
-			elif(CUSTO):
-				if(line == 'DEMAND_SECTION'):
-					DEMAND = True
-					CUSTO = False
-					continue
-				customer_xy.append(list(map(lambda k: float(k)/100., line.split()))[1:])
-			elif(DEMAND):
-				if(line == '1 0'):
-					continue
-				elif(line == 'DEPOT_SECTION'):
-					break
-				else:
-					demand.append(list(map(lambda k: float(k)/100., line.split()))[1])
-	
-	
-	return (torch.tensor(np.expand_dims(np.array(depot_xy), axis = 0), dtype = torch.float), 
-			torch.tensor(np.expand_dims(np.array(customer_xy), axis = 0), dtype = torch.float), 
-			torch.tensor(np.expand_dims(np.array(demand), axis = 0), dtype = torch.float))
-
-def data_from_txt_vrptw(path):
-	if not os.path.isfile(path):
-		raise FileNotFoundError	
-	with open(path, 'r') as f:
-		lines = list(map(lambda s: s.strip(), f.readlines()))
-		customer_xy, demand = [], []
-		ZERO, DEPOT, CUSTO, DEMAND = [False for i in range(4)]
-		ZERO = True
-		for line in lines:
-			if(ZERO):
-				if(line == 'NODE_COORD_SECTION'):
-					ZERO = False
-					DEPOT = True
-
-			elif(DEPOT):
-				depot_xy = list(map(lambda k: float(k)/100., line.split()))[1:]
-				DEPOT = False
-				CUSTO = True
-				
-			elif(CUSTO):
-				if(line == 'DEMAND_SECTION'):
-					DEMAND = True
-					CUSTO = False
-					continue
-				customer_xy.append(list(map(lambda k: float(k)/100., line.split()))[1:])
-			elif(DEMAND):
-				if(line == '1 0'):
-					continue
-				elif(line == 'DEPOT_SECTION'):
-					break
-				else:
-					demand.append(list(map(lambda k: float(k)/100., line.split()))[1])
-	
-	
-	return (torch.tensor(np.expand_dims(np.array(depot_xy), axis = 0), dtype = torch.float), 
-			torch.tensor(np.expand_dims(np.array(customer_xy), axis = 0), dtype = torch.float), 
-			torch.tensor(np.expand_dims(np.array(demand), axis = 0), dtype = torch.float))
 
 if __name__ == '__main__':
 	device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -124,8 +49,8 @@ if __name__ == '__main__':
 	
 	data = generate_data(device, n_samples = 128, n_customer = 20, seed = 123)
 	for i in range(len(data)):
-	 	print(data[i].dtype)
-	 	print(data[i].size())
+		print(data[i].dtype)
+		print(data[i].size())
 	
 	
 	batch, batch_steps, n_customer = 128, 100000, 20

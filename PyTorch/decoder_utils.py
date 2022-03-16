@@ -131,8 +131,8 @@ class Env():
 		d = torch.gather(input = self.xy, dim = 1, index = pi[:,:,None].repeat(1,1,2))
 		# d = torch.gather(input = self.xy, dim = 1, index = pi[:,:,None].expand(self.batch,pi.size(1),2))
 		return (torch.sum((d[:, 1:] - d[:, :-1]).norm(p = 2, dim = 2), dim = 1)
-				+ (d[:, 0] - self.depot_xy).norm(p = 2, dim = 1)# distance from depot to first selected node
-				+ (d[:, -1] - self.depot_xy).norm(p = 2, dim = 1)# distance from last selected node (!=0 for graph with longest path) to depot
+				+ (d[:, 0] - self.depot_xy).norm(p = 2, dim = 1)
+				+ (d[:, -1] - self.depot_xy).norm(p = 2, dim = 1)
 				)
 
 	def get_cost_path(self,now_node,next_node):
