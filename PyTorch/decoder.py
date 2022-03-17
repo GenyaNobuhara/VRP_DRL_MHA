@@ -45,7 +45,10 @@ class DecoderCell(nn.Module):
 		log_ps, tours= [], []
 		first_node = [[0]]*step_context.size()[0]
 		now_node = torch.tensor(first_node).to(self.device)
+		#性別マッチングスコア
 		gender_score = torch.tensor(first_node).to(torch.float64).to(self.device)
+		#診療科マッチングスコア
+		department_score = torch.tensor(first_node).to(torch.float64).to(self.device)
 		#時間コストの計算
 		time_cost = torch.tensor(first_node,dtype=torch.float).to(self.device)
 		#累積時間
@@ -60,8 +63,11 @@ class DecoderCell(nn.Module):
 			T = T + required_time
 			time_cost += env.get_time_cost(next_node,T)
 
-			#性別のスコアを表示
-			gender_score += env.get_gender_score(next_node)
+			#マッチングのスコアを更新
+
+			gs,ds = env.get_matching_score(next_node)
+			gender_score += gs
+			department_score += ds
 
 			T += 1/12
 			mask, step_context, D, T = env._get_step(next_node, D, T)
@@ -73,29 +79,37 @@ class DecoderCell(nn.Module):
 
 		pi = torch.stack(tours, 1)
 		cost = env.get_costs(pi)
-		cost -= gender_score.squeeze(1)
-		cost += time_cost.view(-1)
 
-		#cost = 
+		#報酬の計算
+		alpha = 0.5
+		beta1 = 0.5
+		beta2 = 0.5
+
+		#cost -= gender_score.squeeze(1)
+		#cost -= department_score.squeeze(1)
+		#cost += time_cost.view(-1)
+
+		cost = (1-alpha)*cost + alpha*time_cost.view(-1) - beta1*gender_score.squeeze(1) - beta2*department_score.squeeze(1)
 		ll = env.get_log_likelihood(torch.stack(log_ps, 1), pi)
 		
 		if return_pi:
-			return cost, ll, pi, time_cost,gender_score.to(torch.float64)
-		return cost, ll, time_cost,gender_score.to(torch.float64)
+			return cost, ll, pi, time_cost,gender_score.to(torch.float64),department_score.to(torch.float64)
+		return cost, ll, time_cost,gender_score.to(torch.float64),department_score.to(torch.float64)
 
 if __name__ == '__main__':
-	batch, n_nodes, embed_dim = 3, 22, 128
-	data = generate_data('cuda:0' if torch.cuda.is_available() else 'cpu',n_samples = batch, n_customer = n_nodes-2)
+	batch, n_nodes, embed_dim = 3, 28, 128
+	data = generate_data('cuda:0' if torch.cuda.is_available() else 'cpu',n_samples = batch, n_customer = n_nodes-8)
 	decoder = DecoderCell(embed_dim, n_heads = 8, clip = 10.)
 	node_embeddings = torch.rand((batch, n_nodes, embed_dim), dtype = torch.float)
 	graph_embedding = torch.rand((batch, embed_dim), dtype = torch.float)
 	encoder_output = (node_embeddings, graph_embedding)
 
 	decoder.train()
-	cost, ll, pi, time_cost,gender_score = decoder(data, encoder_output, return_pi = True, decode_type = 'sampling')
+	cost, ll, pi, time_cost,gender_score,department_score = decoder(data, encoder_output, return_pi = True, decode_type = 'sampling')
 	print('\ndata: ',data)
 	print('\ncost: ', cost.size(), cost)
 	print('\nll: ', ll.size(), ll)
 	print('\npi: ', pi.size(), pi)
 	print('\ntimecost:',time_cost.size(),time_cost)
-	print('\ngendercost:',gender_score.size(),gender_score)
+	print('\ngenderscore:',department_score.size(),gender_score)
+	print('\ndepartmentscore:',department_score.size(),department_score)

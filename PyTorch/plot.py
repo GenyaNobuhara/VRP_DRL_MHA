@@ -12,9 +12,13 @@ from config import test_parser
 
 
 def get_clean_path(arr):
-	"""Returns extra zeros from path.
-	   Dynamical model generates duplicated zeros for several graphs when obtaining partial solutions.
-	"""
+	'''
+	for i in range(len(arr)):
+		if arr[i]<8:
+			arr[i] = 0
+		else:
+			arr[i] -= 7
+	'''
 	p1, p2 = 0, 1
 	output = []
 	while p2 < len(arr):
@@ -42,13 +46,13 @@ def plot_route(data, pi, costs, title, idx_in_batch = 0):
 
 	pi_ = get_clean_path(pi[idx_in_batch].cpu().numpy())
 
-	depot_xy = data[0][idx_in_batch].cpu().numpy()
+	depot_xy = data[0][idx_in_batch][0].cpu().numpy()
 	customer_xy = data[1][idx_in_batch].cpu().numpy()
 	demands = data[2][idx_in_batch].cpu().numpy()
 	readyTime = data[3][idx_in_batch].cpu().numpy()
 	dueTime = data[4][idx_in_batch].cpu().numpy()
 	# customer_labels = ['(' + str(i) + ', ' + str(demand) + ')' for i, demand in enumerate(demands.round(2), 1)]
-	customer_labels = ['(' + str(np.round(readyTime[i],2))+ ')' for i in range(len(dueTime))]
+	customer_labels = ['(' + str(i)+ ')' for i in range(len(dueTime))]
 	
 	xy = np.concatenate([depot_xy.reshape(1, 2), customer_xy], axis = 0)
 
@@ -127,142 +131,14 @@ if __name__ == '__main__':
 			data = []
 			vehicle_list = []
 			seed = j*10+8
-			for i in range(9):
+			for i in range(11):
 				elem = [generate_data(device, 1, args.n_customer,seed)[i].squeeze(0) for j in range(args.batch)]
 				data.append(torch.stack(elem, 0))
 			ready = [i/30 for i in range(20)]
 			due = [ready[i]+(1/3) for i in range(20)]
 			king3 = []
 			king4 = []
-			data[0] = torch.tensor([[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			])
+			data[0] = torch.ones((128,8,2), device = device)*(1/2)
 			for k in range(128):
 				king3.append(ready)
 				king4.append(due)
@@ -271,7 +147,7 @@ if __name__ == '__main__':
 			pretrained = pretrained.to(device)
 			pretrained.eval()
 			with torch.no_grad():
-				costs, _, pi,time_cost,gender_score = pretrained(data, return_pi = True, decode_type = args.decode_type)
+				costs, _, pi,time_cost,gender_score,department_score = pretrained(data, return_pi = True, decode_type = args.decode_type)
 			idx_in_batch = torch.argmin(costs, dim = 0)
 			for i in range(128):
 				vehicle_list.append(pi[i].tolist().count(0))
@@ -283,140 +159,13 @@ if __name__ == '__main__':
 		print((np.array(all_cos)-np.array(all_time_cos)).tolist())
 		#print(all_cos)
 		#print(all_time_cos)
-
+	else:
 		data = []
-		for i in range(9):
+		for i in range(11):
 			elem = [generate_data(device, 1, args.n_customer, args.seed)[i].squeeze(0) for j in range(args.batch)]
 			data.append(torch.stack(elem, 0))
 		print(f'data generate time:{time()-t1}s')
-		data[0] = torch.tensor([[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5],
-			[0.5,0.5]])
+		data[0] = torch.ones((128,8,2), device = device)*(1/2)
 		king = []
 		king2 = []
 		d = [0.2667, 0.2667, 0.3000, 0.2667, 0.0667, 0.1000, 0.0333, 0.0333, 0.2667,
@@ -441,13 +190,14 @@ if __name__ == '__main__':
 		pretrained = pretrained.to(device)
 		pretrained.eval()
 		with torch.no_grad():
-			costs, _, pi,time_cost,gender_score = pretrained(data, return_pi = True, decode_type = args.decode_type)
+			costs, _, pi,time_cost,gender_score,department_score = pretrained(data, return_pi = True, decode_type = args.decode_type)
 		print('costs:', costs)
 		print('time_costs:',time_cost)
-		idx_in_batch = torch.argmin(costs, dim = 0)
+		#idx_in_batch = torch.argmin(costs, dim = 0)
+		idx_in_batch = 0
 		print(f'decode type:{args.decode_type}\nminimum cost: {costs[idx_in_batch]:.3f} and idx: {idx_in_batch} out of {args.batch} solutions')
 		print(f'{pi[idx_in_batch]}\ninference time: {time()-t1}s')
-		plot_route(data, pi, costs, 'Pretrained', idx_in_batch)
+		#plot_route(data, pi, costs, 'Pretrained', idx_in_batch)
 		print(costs[idx_in_batch])
 		print(time_cost[idx_in_batch])
 		

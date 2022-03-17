@@ -80,23 +80,26 @@ class EncoderLayer(nn.Module):
 class GraphAttentionEncoder(nn.Module):
 	def __init__(self, embed_dim = 128, n_heads = 8, n_layers = 3, FF_hidden = 512):
 		super().__init__()
-		self.init_W_depot = torch.nn.Linear(2, embed_dim, bias = True)
-		self.init_W = torch.nn.Linear(7, embed_dim, bias = True)
+		self.init_W_depot = torch.nn.Linear(8, embed_dim, bias = True)
+		self.init_W = torch.nn.Linear(11, embed_dim, bias = True)
 		self.encoder_layers = nn.ModuleList([EncoderLayer(n_heads, FF_hidden, embed_dim) for _ in range(n_layers)])
 	
 	def forward(self, x, mask = None):
-		""" x[0] -- depot_xy: (batch, 2,2)
-		x[1] -- customer_xy: (batch, n_nodes-1, 2)
-		x[2] -- demand: (batch, n_nodes-1)
-		x[3] -- customer_ReadyTime: (batch, n_node-1)
-		x[4] -- customer_DueTime: (batch, n_node)
-			--> concated_customer_feature: (batch, n_nodes-1, 7) --> embed_customer_feature: (batch, n_nodes-1, embed_dim)
+		""" x[0] -- depot_xy: (batch, 8,2)
+		x[1] -- customer_xy: (batch, n_customer, 2)
+		x[2] -- demand: (batch, n_customer)
+		x[3] -- customer_ReadyTime: (batch, n_customer)
+		x[4] -- customer_DueTime: (batch, n_customer)
+			--> concated_customer_feature: (batch, n_customer, 7) --> embed_customer_feature: (batch, n_customer, embed_dim)
 			embed_x(batch, n_nodes, embed_dim)
-
+		x[7] -- depot_gender (batch, 8,2)
+		x[8] -- customer_gender (batch, n_customer, 2)
+		x[9] -- depot_department (batch, 8,4)
+		x[10] -- customer_department (batch, n_customer, 4)
 			return: (node embeddings(= embedding for all nodes), graph embedding(= mean of node embeddings for graph))
 				=((batch, n_nodes, embed_dim), (batch, embed_dim))
 		"""
-		x = torch.cat([self.init_W_depot(x[0]),self.init_W(torch.cat([x[1], x[2][:, :, None],x[3][:,:,None],x[4][:,:,None],x[8]], dim = -1))],dim=1)
+		x = torch.cat([self.init_W_depot(torch.cat([x[0],x[7],x[9]],dim=-1)),self.init_W(torch.cat([x[1], x[2][:, :, None],x[3][:,:,None],x[4][:,:,None],x[8],x[10]], dim = -1))],dim=1)
 	
 		for layer in self.encoder_layers:
 			x = layer(x, mask)
@@ -105,7 +108,7 @@ class GraphAttentionEncoder(nn.Module):
 
 if __name__ == '__main__':
 	batch = 5
-	n_nodes = 22
+	n_nodes = 28
 	encoder = GraphAttentionEncoder(n_layers = 1)
 	data = generate_data('cuda:0' if torch.cuda.is_available() else 'cpu',n_samples = batch, n_customer = 20)
 	output = encoder(data, mask = None)

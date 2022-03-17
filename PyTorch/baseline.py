@@ -135,6 +135,6 @@ class RolloutBaseline:
 		dataloader = DataLoader(dataset, batch_size = batch)
 		for inputs in tqdm(dataloader, disable = disable_tqdm, desc = 'Rollout greedy execution'):
 			with torch.no_grad():
-				cost, _ ,_,_= model(inputs, decode_type = 'greedy')
+				cost, _ ,_,_,_= model(inputs, decode_type = 'greedy')
 				costs_list.append(cost)
 		return torch.cat(costs_list, 0)

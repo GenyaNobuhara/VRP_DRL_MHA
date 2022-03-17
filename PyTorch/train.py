@@ -13,9 +13,9 @@ from config import Config, load_pkl, train_parser
 def train(cfg, log_path = None):
 	torch.backends.cudnn.benchmark = True
 	def rein_loss(model, inputs, bs, t, device):
-		L, ll,time_cost,gender_score = model(inputs, decode_type = 'sampling')
+		L, ll,time_cost,gender_score,department_score = model(inputs, decode_type = 'sampling')
 		b = bs[t] if bs is not None else baseline.eval(inputs, L)
-		return ((L - b.to(device)) * ll).mean(), L.mean(),time_cost.mean(),gender_score.mean()
+		return ((L - b.to(device)) * ll).mean(), L.mean(),time_cost.mean(),gender_score.mean(),department_score.mean()
 	
 	model = AttentionModel(cfg.embed_dim, cfg.n_encode_layers, cfg.n_heads, cfg.tanh_clipping)
 	model.train()
@@ -27,7 +27,7 @@ def train(cfg, log_path = None):
 	
 	t1 = time()
 	for epoch in range(cfg.epochs):
-		ave_loss, ave_L, ave_T,ave_G = 0., 0.,0.,0.
+		ave_loss, ave_L, ave_T,ave_G,ave_D = 0., 0.,0.,0.,0.
 		dataset = Generator(device, cfg.batch*cfg.batch_steps, cfg.n_customer)
 		bs = baseline.eval_all(dataset)
 		bs = bs.view(-1, cfg.batch) if bs is not None else None# bs: (cfg.batch_steps, cfg.batch) or None
@@ -35,7 +35,7 @@ def train(cfg, log_path = None):
 		dataloader = DataLoader(dataset, batch_size = cfg.batch, shuffle = True)
 		for t, inputs in enumerate(dataloader):
 			
-			loss, L_mean,T_mean,G_mean= rein_loss(model, inputs, bs, t, device)
+			loss, L_mean,T_mean,G_mean,D_mean= rein_loss(model, inputs, bs, t, device)
 			optimizer.zero_grad()
 			loss.backward()
 			nn.utils.clip_grad_norm_(model.parameters(), max_norm = 1.0, norm_type = 2)
@@ -45,6 +45,7 @@ def train(cfg, log_path = None):
 			ave_L += L_mean.item()
 			ave_T += T_mean.item()
 			ave_G += G_mean.item()
+			ave_D += D_mean.item()
 			
 			if t%(cfg.batch_verbose) == 0:
 				t2 = time()
@@ -56,8 +57,8 @@ def train(cfg, log_path = None):
 						with open(log_path, 'w') as f:
 							f.write('time,epoch,batch,loss,cost\n')
 					with open(log_path, 'a') as f:
-						f.write('%dmin%dsec,%d,%d,%1.3f,%1.3f,%1.3f,%1.3f\n'%(
-							(t2-t1)//60, (t2-t1)%60, epoch, t, ave_loss/(t+1), ave_L/(t+1), ave_T/(t+1),ave_G/(t+1)))
+						f.write('%dmin%dsec,%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f\n'%(
+							(t2-t1)//60, (t2-t1)%60, epoch, t, ave_loss/(t+1), ave_L/(t+1), ave_T/(t+1),ave_G/(t+1),ave_D/(t+1)))
 				t1 = time()
 
 		baseline.epoch_callback(model, epoch)
